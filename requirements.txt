@@ -1,0 +1,10 @@
+# Core ML
+torch==2.2.2
+torchvision==0.17.2
+
+# Data
+numpy==1.26.4
+Pillow==10.3.0
+
+# Config
+PyYAML==6.0.1

@@ -1,0 +1,10 @@
+data:
+  root_dir: "data/raw"
+  category: "bottle"
+  image_size: 256
+  batch_size: 32
+  num_workers: 4
+
+cnn:
+  architecture: "densenet121"
+  num_classes: 2
