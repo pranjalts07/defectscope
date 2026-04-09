@@ -13,6 +13,11 @@ defectscope-env/
 venv/
 .venv/
 
+# Dataset — download separately
+data/raw/
+data/processed/
+data/mvtec_anomaly_detection/
+
 # OS
 .DS_Store
 Thumbs.db
