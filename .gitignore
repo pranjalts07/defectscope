@@ -13,6 +13,10 @@ defectscope-env/
 venv/
 .venv/
 
+# Model weights — too large for git; use S3 or git-lfs
+models/*.pth
+models/*.onnx
+
 # Dataset — download separately
 data/raw/
 data/processed/
