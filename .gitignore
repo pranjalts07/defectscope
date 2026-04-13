@@ -13,6 +13,9 @@ defectscope-env/
 venv/
 .venv/
 
+# Secrets
+# (add .env here once we create it)
+
 # Model weights — too large for git; use S3 or git-lfs
 models/*.pth
 models/*.onnx
@@ -21,6 +24,9 @@ models/*.onnx
 data/raw/
 data/processed/
 data/mvtec_anomaly_detection/
+
+# W&B
+wandb/
 
 # OS
 .DS_Store

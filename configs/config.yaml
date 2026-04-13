@@ -8,3 +8,11 @@ data:
 cnn:
   architecture: "densenet121"
   num_classes: 2
+
+autoencoder:
+  learning_rate: 1.0e-3
+  epochs: 50
+
+wandb:
+  project: "defectscope"
+  entity: null

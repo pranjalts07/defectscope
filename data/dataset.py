@@ -2,7 +2,7 @@ import os
 import cv2
 import torch
 import numpy as np
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 from albumentations import (
     Compose,
     HorizontalFlip,
@@ -30,6 +30,21 @@ def get_eval_transforms(image_size: int = 256) -> Compose:
     # No augmentation at eval time — just normalize
     return Compose([
         Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+        ToTensorV2(),
+    ])
+
+
+def get_ae_transforms() -> Compose:
+    """
+    Autoencoder-specific transform — pixel values normalized to [0, 1] only.
+
+    The autoencoder decoder ends with Sigmoid() which outputs [0, 1].
+    MSE loss only makes sense when input and output are in the same range.
+    ImageNet normalization produces values roughly in [-2, 2] — completely
+    incompatible with Sigmoid output.
+    """
+    return Compose([
+        Normalize(mean=[0.0, 0.0, 0.0], std=[1.0, 1.0, 1.0], max_pixel_value=255.0),
         ToTensorV2(),
     ])
 
@@ -107,3 +122,18 @@ class MVTecDataset(Dataset):
         good = sum(1 for l in self.labels if l == 0)
         defective = sum(1 for l in self.labels if l == 1)
         return {"good": good, "defective": defective}
+
+
+def build_ae_loader(
+    root_dir: str,
+    category: str,
+    batch_size: int = 32,
+    num_workers: int = 4,
+) -> DataLoader:
+    """Autoencoder trains only on good images using [0,1] normalization."""
+    good_ds = MVTecDataset(
+        root_dir, category, split="train",
+        transform=get_ae_transforms(),
+        good_only=True,
+    )
+    return DataLoader(good_ds, batch_size=batch_size, shuffle=True, num_workers=num_workers)
