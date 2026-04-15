@@ -14,7 +14,7 @@ venv/
 .venv/
 
 # Secrets
-# (add .env here once we create it)
+# (add .env once created)
 
 # Model weights — too large for git; use S3 or git-lfs
 models/*.pth
@@ -24,6 +24,9 @@ models/*.onnx
 data/raw/
 data/processed/
 data/mvtec_anomaly_detection/
+
+# Eval outputs
+evaluation/results/
 
 # W&B
 wandb/
