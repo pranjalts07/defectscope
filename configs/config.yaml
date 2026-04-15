@@ -8,6 +8,13 @@ data:
 cnn:
   architecture: "densenet121"
   num_classes: 2
+  freeze_layers: true
+  dropout: 0.4
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-5
+  epochs: 30
+  scheduler: "cosine"
+  classification_threshold: 0.5
 
 autoencoder:
   learning_rate: 1.0e-3
