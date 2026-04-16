@@ -1,6 +1,6 @@
 data:
   root_dir: "data/raw"
-  category: "bottle"
+  category: "bottle"       # MVTec category to train on
   image_size: 256
   batch_size: 32
   num_workers: 4
@@ -14,11 +14,17 @@ cnn:
   weight_decay: 1.0e-5
   epochs: 30
   scheduler: "cosine"
-  classification_threshold: 0.5
+  classification_threshold: 0.3363
 
 autoencoder:
   learning_rate: 1.0e-3
   epochs: 50
+  anomaly_threshold: 0.001470
+
+paths:
+  cnn_checkpoint: "models/densenet_defect.pth"
+  ae_checkpoint:  "models/autoencoder.pth"
+  results_dir:    "evaluation/results"
 
 wandb:
   project: "defectscope"
