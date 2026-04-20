@@ -1,6 +1,7 @@
 # Core ML
 torch==2.2.2
 torchvision==0.17.2
+torchaudio==2.2.2
 
 # Computer vision
 opencv-python-headless==4.9.0.80
@@ -11,6 +12,11 @@ Pillow==10.3.0
 numpy==1.26.4
 scikit-learn==1.4.2
 pandas==2.2.2
+
+# API
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+python-multipart==0.0.9
 
 # Config
 PyYAML==6.0.1
@@ -23,5 +29,5 @@ wandb==0.17.0
 matplotlib==3.9.0
 seaborn==0.13.2
 
-# Progress bars
+# Progress bars (for training scripts)
 tqdm==4.66.4
