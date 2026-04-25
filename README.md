@@ -2,15 +2,13 @@
 
 Real-time bottle defect detection for manufacturing. Built to catch what humans miss, at 40ms per bottle instead of 5 seconds.
 
-## 🚀 Live Demo
+## Live Demo
 
 **Try it now:** https://defectscope.azurewebsites.net
 
 Upload a bottle image or use one of the samples. See instant predictions with Grad-CAM heatmaps showing exactly what the AI saw.
 
-### Screenshot
-
-![DefectScope Interface](https://defectscope.azurewebsites.net/screenshot.png)
+![DefectScope Interface](demo.png)
 
 ---
 
