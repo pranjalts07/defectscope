@@ -1,0 +1,65 @@
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient Background -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="800" fill="url(#bgGradient)"/>
+
+  <!-- White Container -->
+  <rect x="300" y="100" width="600" height="600" rx="12" fill="white" stroke="#e0e0e0" stroke-width="2"/>
+
+  <!-- Header -->
+  <text x="600" y="160" font-size="32" font-weight="bold" text-anchor="middle" fill="#333">
+    DefectScope
+  </text>
+  <text x="600" y="195" font-size="16" text-anchor="middle" fill="#999">
+    Real-time bottle defect detection
+  </text>
+
+  <!-- Upload Zone -->
+  <rect x="350" y="240" width="500" height="180" rx="8" fill="#f8f9ff" stroke="#667eea" stroke-width="2" stroke-dasharray="5,5"/>
+
+  <text x="600" y="300" font-size="48" text-anchor="middle" fill="#999">
+    📸
+  </text>
+  <text x="600" y="340" font-size="18" text-anchor="middle" fill="#666">
+    Drop your image here or click
+  </text>
+  <text x="600" y="365" font-size="14" text-anchor="middle" fill="#aaa">
+    PNG, JPG up to 10MB
+  </text>
+
+  <!-- Choose Button -->
+  <rect x="450" y="460" width="300" height="50" rx="6" fill="#667eea"/>
+  <text x="600" y="491" font-size="18" text-anchor="middle" fill="white" font-weight="bold">
+    Choose Image
+  </text>
+
+  <!-- Result Section (shown after upload) -->
+  <rect x="350" y="540" width="500" height="120" rx="6" fill="#f8f9fa" stroke="#e0e0e0" stroke-width="1"/>
+
+  <text x="380" y="570" font-size="14" fill="#666">
+    Status:
+  </text>
+  <text x="650" y="570" font-size="14" fill="#27ae60" font-weight="bold">
+    ✓ Good
+  </text>
+
+  <text x="380" y="600" font-size="14" fill="#666">
+    Confidence:
+  </text>
+  <text x="650" y="600" font-size="14" fill="#333" font-weight="bold">
+    97.6%
+  </text>
+
+  <text x="380" y="630" font-size="14" fill="#666">
+    Processing Time:
+  </text>
+  <text x="650" y="630" font-size="14" fill="#333" font-weight="bold">
+    38ms
+  </text>
+</svg>

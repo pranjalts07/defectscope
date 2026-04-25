@@ -69,6 +69,12 @@ Just drag and drop a bottle image. You get back:
 - Where on the bottle it spotted the issue
 - Whether it needs human review
 
+**The Interface:**
+
+![DefectScope Web UI](web_ui_preview.svg)
+
+Clean, modern design. Purple gradient background. Drag-and-drop upload zone. Results show up instantly with a visual status indicator.
+
 ### API
 
 ```bash
