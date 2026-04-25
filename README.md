@@ -61,19 +61,18 @@ Then open your browser to **http://localhost:8000** and you'll see the web inter
 
 ## Using It
 
-### Web UI
+### Live Demo
 
-Just drag and drop a bottle image. You get back:
-- Whether it's good or defective ✓ or ⚠
-- Confidence level (how sure we are)
-- Where on the bottle it spotted the issue
-- Whether it needs human review
+Try it yourself: **https://defectscope.azurewebsites.net**
 
-**The Interface:**
+Upload a bottle image and see real-time predictions with:
+- Classification result (Good / Defective)
+- Confidence score and latency
+- Grad-CAM heatmap showing which regions triggered the decision
+- Anomaly score from the autoencoder
+- Detailed explanation of what the model saw
 
-![DefectScope Web UI](web_ui_preview.svg)
-
-Clean, modern design. Purple gradient background. Drag-and-drop upload zone. Results show up instantly with a visual status indicator.
+The interface has sample bottles you can test instantly, or upload your own.
 
 ### API
 
