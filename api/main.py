@@ -6,10 +6,12 @@ Run locally:
 """
 
 import logging
+from pathlib import Path
 
 import cv2
 import numpy as np
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.staticfiles import StaticFiles
 
 from api.schemas import PredictionResponse, HealthResponse
 from inference.predict import DefectPredictor
@@ -23,6 +25,11 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# Serve static files (web UI)
+static_dir = Path(__file__).parent / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
 
 @app.on_event("startup")
 async def load_models():
@@ -33,6 +40,17 @@ async def load_models():
     except FileNotFoundError as e:
         logger.error(f"Model checkpoint not found: {e}")
         app.state.predictor = None
+
+
+@app.get("/")
+async def root():
+    """Serve the web UI."""
+    from fastapi.responses import FileResponse
+    static_dir = Path(__file__).parent / "static"
+    index_file = static_dir / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+    return {"message": "DefectScope API. POST /predict with an image file."}
 
 
 @app.get("/health", response_model=HealthResponse)
