@@ -2,10 +2,24 @@
 
 Real-time bottle defect detection for manufacturing. Built to catch what humans miss, at 40ms per bottle instead of 5 seconds.
 
+## 🚀 Live Demo
+
+**Try it now:** https://defectscope.azurewebsites.net
+
+Upload a bottle image or use one of the samples. See instant predictions with Grad-CAM heatmaps showing exactly what the AI saw.
+
+### Screenshot
+
+![DefectScope Interface](https://defectscope.azurewebsites.net/screenshot.png)
+
+---
+
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://python.org)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.2-red.svg)](https://pytorch.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111-green.svg)](https://fastapi.tiangelo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+---
 
 ## The Problem
 
@@ -61,18 +75,14 @@ Then open your browser to **http://localhost:8000** and you'll see the web inter
 
 ## Using It
 
-### Live Demo
+### Web UI
 
-Try it yourself: **https://defectscope.azurewebsites.net**
-
-Upload a bottle image and see real-time predictions with:
+Just drag and drop a bottle image or click to upload. You get back:
 - Classification result (Good / Defective)
 - Confidence score and latency
 - Grad-CAM heatmap showing which regions triggered the decision
 - Anomaly score from the autoencoder
 - Detailed explanation of what the model saw
-
-The interface has sample bottles you can test instantly, or upload your own.
 
 ### API
 
@@ -180,7 +190,9 @@ This isn't just a fancy neural net. The real engineering is in:
 
 ---
 
-MIT License. Built with PyTorch, FastAPI, OpenCV. No data or model weights included in the repo (check `.gitignore`).
+**License:** MIT (see LICENSE file)
+
+Built with PyTorch, FastAPI, OpenCV. No data or model weights included in the repo (check `.gitignore`).
 
 Questions? File an issue with:
 - What you were trying to do
