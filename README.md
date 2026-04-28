@@ -28,7 +28,6 @@ Upload a bottle image or select from sample images to see live predictions with 
 - [Limitations](#limitations)
 - [Development](#development)
 
----
 
 ## Problem Statement
 
@@ -73,7 +72,6 @@ This approach catches:
 
 Grad-CAM (Gradient-weighted Class Activation Mapping) generates heatmaps showing which image regions influenced the classification. Warm colors indicate regions that activated defect detection. This provides traceability—essential for manufacturing audits.
 
----
 
 ## Key Results
 
@@ -94,7 +92,6 @@ Performance comparison with baseline:
 | Manual Inspection | 12 bottles/min | ~92% |
 | **DefectScope** | **~1,500 bottles/min** | **96%** |
 
----
 
 ## Getting Started
 
@@ -154,7 +151,6 @@ docker-compose up --build
 
 The service runs on port 8000 and is ready for production.
 
----
 
 ## Usage
 
@@ -195,8 +191,6 @@ Full API documentation available at http://localhost:8000/docs (Swagger UI).
 python -m inference.predict --image path/to/bottle.jpg --config configs/config.yaml
 ```
 
----
-
 ## Architecture
 
 ```
@@ -234,8 +228,6 @@ defectscope/
 └── docker-compose.yml       # Multi-container orchestration
 ```
 
----
-
 ## Performance
 
 Latency breakdown on M1 MacBook Pro (CPU mode):
@@ -256,7 +248,6 @@ On GPU hardware (NVIDIA A100), total latency reduces to ~15ms. Throughput: ~1,50
 - Development: M1 MacBook Pro, 16GB unified memory (CPU)
 - Inference: NVIDIA A100 GPU (production deployment)
 
----
 
 ## Engineering Decisions
 
@@ -288,8 +279,6 @@ Visual explanations matter in manufacturing:
 
 If the autoencoder model fails to load, the CNN continues operating independently. The system reports degraded mode but remains functional. This prevents total service failure during model updates.
 
----
-
 ## Limitations
 
 - **Training data domain**: Model trained on overhead bottle photos under controlled lighting. Performance degrades on unusual angles, outdoor lighting, or different bottle shapes.
@@ -297,7 +286,6 @@ If the autoencoder model fails to load, the CNN continues operating independentl
 - **Novelty detection ceiling**: The autoencoder catches ~86% of novel defects—some truly out-of-distribution anomalies will slip through.
 - **Labeling requirements**: Effective performance requires ~200-300 labeled images per category.
 
----
 
 ## Development
 
@@ -333,8 +321,6 @@ python scripts/export_onnx.py --model-path models/densenet.pth --output models/d
 
 Creates ONNX-format models for deployment on edge devices without PyTorch dependency.
 
----
-
 ## Roadmap
 
 - [ ] ONNX export for edge/embedded deployment
@@ -343,8 +329,6 @@ Creates ONNX-format models for deployment on edge devices without PyTorch depend
 - [ ] Active learning: Online model improvement from production corrections
 - [ ] Explainable failure modes: Confidence intervals around predictions
 
----
-
 ## References
 
 - [MVTec Anomaly Detection Dataset](https://www.mvtec.com/company/research/datasets/mvtec-ad)
@@ -352,21 +336,9 @@ Creates ONNX-format models for deployment on edge devices without PyTorch depend
 - [Densely Connected Convolutional Networks](https://arxiv.org/abs/1608.06993)
 - [Unsupervised Anomaly Segmentation with Convolutional Autoencoders](https://openreview.net/forum?id=aGoJ21UJHF)
 
----
 
 ## License
 
 MIT License – See [LICENSE](LICENSE) for details.
 
-## Contributing
 
-Issues and pull requests are welcome. Please include:
-- Reproduction steps or description of the issue
-- Environment details (OS, Python version, GPU/CPU)
-- Expected vs. actual behavior
-
-## Questions?
-
-Open an issue on GitHub or contact the maintainers.
-
-Built with PyTorch, FastAPI, and OpenCV.
