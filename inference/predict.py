@@ -1,5 +1,9 @@
 """
-Single-image inference — CNN classifier only.
+Single-image inference — DenseNet classifier cross-verified by the autoencoder.
+
+A unit passes only when both models agree it is good: the classifier must not
+flag it, and its reconstruction error must stay under the trained threshold.
+Disagreement is surfaced as needs_review rather than silently resolved.
 
 Usage as CLI:
     python -m inference.predict --image path/to/image.png
@@ -13,6 +17,7 @@ import numpy as np
 import torch
 import yaml
 
+from models.autoencoder import ConvAutoencoder
 from models.cnn_classifier import get_densenet
 from utils import get_device
 from utils.transforms import preprocess_image
@@ -20,7 +25,7 @@ from utils.transforms import preprocess_image
 
 class DefectPredictor:
     """
-    Wraps the CNN model and handles inference for a single image.
+    Wraps both models and handles inference for a single image.
     Load once at server startup; call .predict() per request.
     """
 
@@ -33,34 +38,50 @@ class DefectPredictor:
 
     def _load_models(self):
         cnn_path = self.cfg["paths"]["cnn_checkpoint"]
+        ae_path = self.cfg["paths"]["ae_checkpoint"]
 
         self.cnn = get_densenet(num_classes=self.cfg["cnn"]["num_classes"])
         self.cnn.load_state_dict(torch.load(cnn_path, map_location=self.device))
         self.cnn.eval().to(self.device)
 
+        self.ae = ConvAutoencoder()
+        self.ae.load_state_dict(torch.load(ae_path, map_location=self.device))
+        self.ae.eval().to(self.device)
+
+        # Trained on good images only; reconstruction error above this is anomalous.
+        self.anomaly_threshold = float(self.cfg["autoencoder"]["anomaly_threshold"])
+
         self.include_heatmap = False
 
     def predict(self, img_np: np.ndarray) -> dict:
-        """Run CNN inference on a uint8 RGB image array."""
+        """Run both models on a uint8 RGB image array and gate on agreement."""
         start = time.perf_counter()
 
-        cnn_tensor = preprocess_image(img_np).to(self.device)
+        batch = preprocess_image(img_np).to(self.device).unsqueeze(0)
 
         with torch.no_grad():
-            logits = self.cnn(cnn_tensor.unsqueeze(0))
-            probs  = torch.softmax(logits, dim=1)[0]
+            logits = self.cnn(batch)
+            probs = torch.softmax(logits, dim=1)[0]
 
-        cnn_pred_idx   = int(probs.argmax().item())
+            reconstruction = self.ae(batch)
+            anomaly_score = float(
+                torch.nn.functional.mse_loss(reconstruction, batch).item()
+            )
+
         cnn_confidence = float(probs.max().item())
+        cnn_flags_defect = int(probs.argmax().item()) == 1
+        ae_flags_defect = anomaly_score > self.anomaly_threshold
 
         result = {
-            "prediction":  "defective" if cnn_pred_idx == 1 else "good",
-            "confidence":  round(cnn_confidence, 4),
-            "anomaly_score":     None,
-            "anomaly_threshold": None,
-            "needs_review":      False,
-            "heatmap_b64":       None,
-            "latency_ms":  round((time.perf_counter() - start) * 1000, 2),
+            # Agreement gate: a unit passes only if neither model objects.
+            "prediction": "good" if not (cnn_flags_defect or ae_flags_defect) else "defective",
+            "confidence": round(cnn_confidence, 4),
+            "anomaly_score": round(anomaly_score, 6),
+            "anomaly_threshold": self.anomaly_threshold,
+            # The models disagreed — worth a human look rather than a silent call.
+            "needs_review": cnn_flags_defect != ae_flags_defect,
+            "heatmap_b64": None,
+            "latency_ms": round((time.perf_counter() - start) * 1000, 2),
         }
         return result
 
