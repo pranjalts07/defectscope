@@ -1,5 +1,31 @@
 import torch
 import torch.nn as nn
+from torchvision.models import densenet121
+
+
+def get_densenet(num_classes: int = 2, dropout: float = 0.4) -> nn.Module:
+    """
+    DenseNet-121 with this project's classification head — the model that is
+    actually shipped for inference (DefectCNN below is kept for comparison).
+
+    The head must match models/densenet_defect.pth exactly:
+        classifier.0 -> Linear(1024, 256)
+        classifier.3 -> Linear(256, num_classes)
+    Indices 1 and 2 are ReLU and Dropout, which hold no parameters and so do
+    not appear in the checkpoint.
+
+    weights=None on purpose: the caller loads the trained checkpoint, so there
+    is no reason to pull ImageNet weights over the network at startup.
+    """
+    model = densenet121(weights=None)
+    in_features = model.classifier.in_features  # 1024 for DenseNet-121
+    model.classifier = nn.Sequential(
+        nn.Linear(in_features, 256),
+        nn.ReLU(inplace=True),
+        nn.Dropout(dropout),
+        nn.Linear(256, num_classes),
+    )
+    return model
 
 
 class DefectCNN(nn.Module):
