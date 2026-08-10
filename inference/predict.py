@@ -48,6 +48,13 @@ class DefectPredictor:
         self.ae.load_state_dict(torch.load(ae_path, map_location=self.device))
         self.ae.eval().to(self.device)
 
+        # Tuned decision threshold on P(defect) — deliberately below 0.5 because
+        # missing a defect costs more than re-checking a good unit. Using argmax
+        # instead would silently discard this calibration.
+        self.classification_threshold = float(
+            self.cfg["cnn"]["classification_threshold"]
+        )
+
         # Trained on good images only; reconstruction error above this is anomalous.
         self.anomaly_threshold = float(self.cfg["autoencoder"]["anomaly_threshold"])
 
@@ -71,8 +78,9 @@ class DefectPredictor:
                 torch.nn.functional.mse_loss(reconstruction, ae_batch).item()
             )
 
-        cnn_confidence = float(probs.max().item())
-        cnn_flags_defect = int(probs.argmax().item()) == 1
+        defect_prob = float(probs[1].item())
+        cnn_flags_defect = defect_prob > self.classification_threshold
+        cnn_confidence = defect_prob if cnn_flags_defect else 1.0 - defect_prob
         ae_flags_defect = anomaly_score > self.anomaly_threshold
 
         # The classifier decides. On this dataset the autoencoder's
