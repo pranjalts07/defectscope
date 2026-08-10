@@ -1,9 +1,9 @@
 """
-Single-image inference — DenseNet classifier cross-verified by the autoencoder.
+Single-image inference — DenseNet classifier with autoencoder second opinion.
 
-A unit passes only when both models agree it is good: the classifier must not
-flag it, and its reconstruction error must stay under the trained threshold.
-Disagreement is surfaced as needs_review rather than silently resolved.
+The classifier makes the call. The autoencoder's reconstruction error is
+reported alongside it, and when the two disagree the result is flagged for
+review rather than silently resolved.
 
 Usage as CLI:
     python -m inference.predict --image path/to/image.png
@@ -57,28 +57,34 @@ class DefectPredictor:
         """Run both models on a uint8 RGB image array and gate on agreement."""
         start = time.perf_counter()
 
-        batch = preprocess_image(img_np).to(self.device).unsqueeze(0)
+        # Two tensors: the classifier wants ImageNet stats, the autoencoder
+        # wants plain [0, 1] to match its Sigmoid output.
+        cnn_batch = preprocess_image(img_np).to(self.device).unsqueeze(0)
+        ae_batch = (
+            preprocess_image(img_np, normalize=False).to(self.device).unsqueeze(0)
+        )
 
         with torch.no_grad():
-            logits = self.cnn(batch)
-            probs = torch.softmax(logits, dim=1)[0]
-
-            reconstruction = self.ae(batch)
+            probs = torch.softmax(self.cnn(cnn_batch), dim=1)[0]
+            reconstruction = self.ae(ae_batch)
             anomaly_score = float(
-                torch.nn.functional.mse_loss(reconstruction, batch).item()
+                torch.nn.functional.mse_loss(reconstruction, ae_batch).item()
             )
 
         cnn_confidence = float(probs.max().item())
         cnn_flags_defect = int(probs.argmax().item()) == 1
         ae_flags_defect = anomaly_score > self.anomaly_threshold
 
+        # The classifier decides. On this dataset the autoencoder's
+        # reconstruction error barely separates good from defective (good mean
+        # 0.00204 vs defect mean 0.00234, ranges overlapping), so using it as a
+        # veto would reject nearly every good unit. It is kept as a second
+        # opinion: when it disagrees with the classifier, flag for review.
         result = {
-            # Agreement gate: a unit passes only if neither model objects.
-            "prediction": "good" if not (cnn_flags_defect or ae_flags_defect) else "defective",
+            "prediction": "defective" if cnn_flags_defect else "good",
             "confidence": round(cnn_confidence, 4),
             "anomaly_score": round(anomaly_score, 6),
             "anomaly_threshold": self.anomaly_threshold,
-            # The models disagreed — worth a human look rather than a silent call.
             "needs_review": cnn_flags_defect != ae_flags_defect,
             "heatmap_b64": None,
             "latency_ms": round((time.perf_counter() - start) * 1000, 2),
