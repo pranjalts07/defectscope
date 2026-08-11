@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" fill="none">
+  <rect width="1200" height="360" rx="24" fill="#F8F6F1"/>
+  <rect x="40" y="100" width="250" height="160" rx="16" fill="#FFFFFF" stroke="#E8E3D7"/>
+  <rect x="330" y="100" width="250" height="160" rx="16" fill="#FFFFFF" stroke="#E8E3D7"/>
+  <rect x="620" y="100" width="250" height="160" rx="16" fill="#FFFFFF" stroke="#E8E3D7"/>
+  <rect x="910" y="100" width="250" height="160" rx="16" fill="#FFFFFF" stroke="#E8E3D7"/>
+  <text x="68" y="148" fill="#0F766E" font-size="22" font-family="Arial" font-weight="700">1. Take / Upload</text>
+  <text x="68" y="182" fill="#5F5B51" font-size="18" font-family="Arial">Product photo</text>
+  <text x="358" y="148" fill="#0F766E" font-size="22" font-family="Arial" font-weight="700">2. Analyze</text>
+  <text x="358" y="182" fill="#5F5B51" font-size="18" font-family="Arial">Model scores image</text>
+  <text x="648" y="148" fill="#0F766E" font-size="22" font-family="Arial" font-weight="700">3. Output</text>
+  <text x="648" y="182" fill="#5F5B51" font-size="18" font-family="Arial">Label + confidence</text>
+  <text x="938" y="148" fill="#0F766E" font-size="22" font-family="Arial" font-weight="700">4. Review</text>
+  <text x="938" y="182" fill="#5F5B51" font-size="18" font-family="Arial">Manual QA decision</text>
+  <path d="M290 180H330" stroke="#0F766E" stroke-width="4" stroke-linecap="round"/>
+  <path d="M580 180H620" stroke="#0F766E" stroke-width="4" stroke-linecap="round"/>
+  <path d="M870 180H910" stroke="#0F766E" stroke-width="4" stroke-linecap="round"/>
+</svg>
