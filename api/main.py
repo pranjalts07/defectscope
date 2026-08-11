@@ -44,6 +44,13 @@ app = FastAPI(
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 app.mount("/assets", StaticFiles(directory=WEB_DIR), name="assets")
 
+# how-it-works.html illustrates good vs defective with real MVTec frames.
+# The dataset itself is gitignored, so a few representative images are kept
+# under samples/ and served from here.
+SAMPLES_DIR = Path(__file__).resolve().parent.parent / "samples"
+if SAMPLES_DIR.exists():
+    app.mount("/samples", StaticFiles(directory=SAMPLES_DIR), name="samples")
+
 
 LANDING_PAGE_HTML = """<!DOCTYPE html>
 <html lang="en">
