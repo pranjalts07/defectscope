@@ -9,7 +9,7 @@ Real-time surface defect detection for manufacturing quality control. Detects bo
 
 ## Live Demo
 
-Try the system in action: **https://defectscope.azurewebsites.net**
+Try the system in action: **https://defectscope.onrender.com**
 
 Upload a bottle image or select from sample images to see live predictions with visual heatmaps explaining the model's decision.
 
