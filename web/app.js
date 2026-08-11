@@ -52,16 +52,20 @@ function switchMode(mode) {
     preview.style.display = "none";
   }
 
+  // Never mark these required. They are hidden, and a sample can be loaded
+  // straight into selectedFile without ever populating .files — native
+  // validation would then block submit on a field the browser cannot show.
+  // The submit handler validates instead.
   if (uploadInput) {
     uploadInput.value = "";
     uploadInput.hidden = true;
-    uploadInput.required = mode === "upload";
+    uploadInput.required = false;
   }
 
   if (cameraInput) {
     cameraInput.value = "";
     cameraInput.hidden = true;
-    cameraInput.required = mode === "camera";
+    cameraInput.required = false;
   }
 
   if (uploadPickerBox) uploadPickerBox.hidden = mode !== "upload";
