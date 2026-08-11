@@ -26,15 +26,20 @@ class GradCAM:
         self.activations: torch.Tensor | None = None
         self._register_hooks()
 
+    def _save_gradient(self, grad: torch.Tensor):
+        self.gradients = grad.detach()
+
     def _register_hooks(self):
         def save_activation(module, input, output):
             self.activations = output.detach()
-
-        def save_gradient(module, grad_in, grad_out):
-            self.gradients = grad_out[0].detach()
+            # Hook the activation tensor, not the module. torchvision's DenseNet
+            # applies F.relu(..., inplace=True) to norm5's output, which makes a
+            # module-level full_backward_hook raise "Output 0 of
+            # BackwardHookFunctionBackward is a view and is being modified inplace".
+            if output.requires_grad:
+                output.register_hook(self._save_gradient)
 
         self.target_layer.register_forward_hook(save_activation)
-        self.target_layer.register_full_backward_hook(save_gradient)
 
     def generate(self, img_tensor: torch.Tensor, class_idx: int = 1) -> np.ndarray:
         """
