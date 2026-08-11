@@ -48,7 +48,28 @@
     <section id="demo" class="demo">
       <div class="panel demo-left">
         <h2>Try it now</h2>
-        <p class="lead">Choose one option only: upload a file or use camera.</p>
+
+        <p class="kicker">Start with a real sample from the test set:</p>
+        <div class="samples" id="samples">
+          <button type="button" class="sample" data-src="/samples/bottle/test/good/019.png">
+            <img src="/samples/bottle/test/good/019.png" alt="Good bottle sample" />
+            <span class="sample-tag ok">Good</span>
+          </button>
+          <button type="button" class="sample" data-src="/samples/bottle/test/good/000.png">
+            <img src="/samples/bottle/test/good/000.png" alt="Good bottle sample" />
+            <span class="sample-tag ok">Good</span>
+          </button>
+          <button type="button" class="sample" data-src="/samples/bottle/test/broken_small/000.png">
+            <img src="/samples/bottle/test/broken_small/000.png" alt="Defective bottle sample" />
+            <span class="sample-tag bad">Defect</span>
+          </button>
+          <button type="button" class="sample" data-src="/samples/bottle/test/broken_large/016.png">
+            <img src="/samples/bottle/test/broken_large/016.png" alt="Defective bottle sample" />
+            <span class="sample-tag bad">Defect</span>
+          </button>
+        </div>
+
+        <p class="lead">or upload your own — choose one: a file or the camera.</p>
 
         <div class="mode-switch" role="tablist" aria-label="Image input mode">
           <button type="button" class="mode-btn active" id="mode-upload">Upload file</button>
@@ -89,30 +110,57 @@
       </div>
 
       <div class="panel demo-right">
-        <h2>Result</h2>
+        <h2>What the model sees</h2>
         <div class="result-empty" id="result-empty">No prediction yet.</div>
 
         <div class="result-card" id="result-card" hidden>
-          <div class="result-row">
-            <div class="result-label">Prediction</div>
-            <div class="result-value" id="result-prediction">-</div>
-          </div>
+          <div class="verdict" id="verdict"><span id="result-prediction">-</span></div>
 
           <div class="result-row">
-            <div class="result-label">Confidence</div>
-            <div class="result-value" id="result-confidence">-</div>
+            <div class="result-label">Defect probability</div>
+            <div class="result-value" id="result-defect-prob">-</div>
           </div>
 
           <div class="meter">
             <div class="meter-fill" id="result-meter"></div>
+            <div class="meter-mark" id="meter-mark" hidden></div>
+          </div>
+          <div class="meter-scale">
+            <span>0%</span>
+            <span id="threshold-label">threshold</span>
+            <span>100%</span>
           </div>
 
-          <div class="result-row">
-            <div class="result-label">Latency</div>
-            <div class="result-value" id="result-latency">-</div>
+          <div class="metrics">
+            <div class="metric">
+              <div class="label">Confidence</div>
+              <div class="result-value" id="result-confidence">-</div>
+            </div>
+            <div class="metric">
+              <div class="label">Latency</div>
+              <div class="result-value" id="result-latency">-</div>
+            </div>
+            <div class="metric">
+              <div class="label">AE score</div>
+              <div class="result-value" id="result-ae">-</div>
+            </div>
           </div>
 
           <div class="result-note" id="result-note">-</div>
+
+          <div class="attention" id="attention" hidden>
+            <div class="attention-head">
+              <span class="label">Model attention map</span>
+              <div class="mode-switch">
+                <button type="button" class="mode-btn active" id="view-heatmap">Heatmap</button>
+                <button type="button" class="mode-btn" id="view-original">Original</button>
+              </div>
+            </div>
+            <img id="attention-img" alt="Grad-CAM attention map" />
+            <p class="kicker">
+              Warmer colours mark the regions that most influenced the defect score.
+            </p>
+          </div>
         </div>
 
         <details class="raw-wrap">
