@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DefectScope | Image Guide</title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <nav class="nav">
+      <a class="brand" href="/">DefectScope <span class="badge">MVP</span></a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/image-guide" class="active">Image Guide</a>
+        <a href="/how-it-works">How It Works</a>
+        <a href="/blog">Blog</a>
+        <a href="/docs">API</a>
+      </div>
+    </nav>
+
+    <section class="panel section">
+      <h2>Accepted Image Types</h2>
+      <p>This model is optimized for product/surface inspection style images. Use these rules before inference.</p>
+
+      <div class="grid-2">
+        <article class="card">
+          <h3>Best Inputs</h3>
+          <ul class="list">
+            <li>Close-up product photos with clear surface details</li>
+            <li>Industrial or quality-check style framing</li>
+            <li>Good lighting and limited background clutter</li>
+            <li>JPG or PNG format</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h3>Poor Inputs</h3>
+          <ul class="list">
+            <li>Screenshots of websites or app UIs</li>
+            <li>Selfies, documents, memes, text-heavy graphics</li>
+            <li>Tiny, blurry, or heavily compressed thumbnails</li>
+            <li>Multiple unrelated objects in one frame</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="grid-3">
+        <article class="card">
+          <h3>Supported MVTec Categories</h3>
+          <ul class="list">
+            <li>bottle</li>
+            <li>cable</li>
+            <li>capsule</li>
+            <li>carpet</li>
+            <li>grid</li>
+            <li>hazelnut</li>
+            <li>leather</li>
+            <li>metal_nut</li>
+            <li>pill</li>
+            <li>screw</li>
+            <li>tile</li>
+            <li>toothbrush</li>
+            <li>transistor</li>
+            <li>wood</li>
+            <li>zipper</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h3>Scoring Interpretation</h3>
+          <ul class="list">
+            <li>0.00 to 0.69 confidence: uncertain</li>
+            <li>0.70 to 0.84 confidence: moderate signal</li>
+            <li>0.85+ confidence: strong signal</li>
+            <li>Always pair with human QA decision</li>
+          </ul>
+        </article>
+
+        <article class="card callout">
+          <h3>Production Rule Suggestion</h3>
+          <ul class="list">
+            <li>If prediction is defective and confidence >= 0.85, auto-flag for urgent review.</li>
+            <li>If confidence < 0.70, route to manual review queue.</li>
+            <li>Log every prediction in operations dashboard.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <p class="footer">Use this page as your data quality checklist before demoing or deploying.</p>
+  </main>
+</body>
+</html>

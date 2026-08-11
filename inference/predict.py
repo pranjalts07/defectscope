@@ -1,16 +1,16 @@
 """
-Single-image inference — DenseNet classifier with autoencoder second opinion.
-
-The classifier makes the call. The autoencoder's reconstruction error is
-reported alongside it, and when the two disagree the result is flagged for
-review rather than silently resolved.
+Single-image inference — CNN classifier + Grad-CAM heatmap + Autoencoder anomaly score.
 
 Usage as CLI:
     python -m inference.predict --image path/to/image.png
 """
 
 import argparse
+import base64
+import logging
+import os
 import time
+from typing import Optional
 
 import cv2
 import numpy as np
@@ -20,89 +20,154 @@ import yaml
 from models.autoencoder import ConvAutoencoder
 from models.cnn_classifier import get_densenet
 from utils import get_device
-from utils.transforms import preprocess_image
+from utils.gradcam import GradCAM, overlay_gradcam
+from utils.transforms import preprocess_image, preprocess_image_ae
+
+logger = logging.getLogger(__name__)
 
 
 class DefectPredictor:
     """
-    Wraps both models and handles inference for a single image.
+    Wraps both the CNN classifier and the Autoencoder anomaly detector.
+
+    - CNN  → binary prediction (good / defective) + Grad-CAM spatial heatmap
+    - AE   → reconstruction error as an independent anomaly signal
+    - When CNN and AE disagree the result is flagged needs_review = True
+
     Load once at server startup; call .predict() per request.
     """
 
-    def __init__(self, config_path: str = "configs/config.yaml"):
+    def __init__(self, config_path: Optional[str] = None):
+        config_path = config_path or os.getenv("CONFIG_PATH", "configs/config.yaml")
         with open(config_path) as f:
             self.cfg = yaml.safe_load(f)
 
         self.device = get_device()
         self._load_models()
 
+    # ------------------------------------------------------------------ #
+    #  Model loading                                                        #
+    # ------------------------------------------------------------------ #
+
     def _load_models(self):
         cnn_path = self.cfg["paths"]["cnn_checkpoint"]
-        ae_path = self.cfg["paths"]["ae_checkpoint"]
+        if not os.path.exists(cnn_path):
+            raise FileNotFoundError(f"CNN checkpoint not found at: {cnn_path}")
 
+        # Thresholds
+        self.classification_threshold = float(
+            self.cfg["cnn"].get("classification_threshold", 0.5)
+        )
+        self.anomaly_threshold = float(
+            self.cfg["autoencoder"].get("anomaly_threshold", 0.0)
+        )
+
+        # ── CNN ──
         self.cnn = get_densenet(num_classes=self.cfg["cnn"]["num_classes"])
         self.cnn.load_state_dict(torch.load(cnn_path, map_location=self.device))
         self.cnn.eval().to(self.device)
 
-        self.ae = ConvAutoencoder()
-        self.ae.load_state_dict(torch.load(ae_path, map_location=self.device))
-        self.ae.eval().to(self.device)
+        # ── Grad-CAM ──
+        # Target: norm5 is the final BN after all dense blocks (8×8 @ 1024ch for 256px input).
+        # Always visualise class 1 (defective) so the heatmap shows "where the model
+        # looked for a defect" regardless of the final label.
+        self.gradcam = GradCAM(self.cnn, target_layer=self.cnn.features.norm5)
+        self.include_heatmap = True
+        logger.info("Grad-CAM registered on features.norm5")
 
-        # Tuned decision threshold on P(defect) — deliberately below 0.5 because
-        # missing a defect costs more than re-checking a good unit. Using argmax
-        # instead would silently discard this calibration.
-        self.classification_threshold = float(
-            self.cfg["cnn"]["classification_threshold"]
-        )
+        # ── Autoencoder (optional — soft-fail if checkpoint missing) ──
+        ae_path = self.cfg["paths"]["ae_checkpoint"]
+        if os.path.exists(ae_path):
+            self.ae = ConvAutoencoder()
+            self.ae.load_state_dict(torch.load(ae_path, map_location=self.device))
+            self.ae.eval().to(self.device)
+            logger.info("Autoencoder loaded — dual-model mode active")
+        else:
+            self.ae = None
+            logger.warning(f"AE checkpoint not found at {ae_path} — anomaly score disabled")
 
-        # Trained on good images only; reconstruction error above this is anomalous.
-        self.anomaly_threshold = float(self.cfg["autoencoder"]["anomaly_threshold"])
-
-        self.include_heatmap = False
+    # ------------------------------------------------------------------ #
+    #  Inference                                                            #
+    # ------------------------------------------------------------------ #
 
     def predict(self, img_np: np.ndarray) -> dict:
-        """Run both models on a uint8 RGB image array and gate on agreement."""
+        """
+        Run full inference on a uint8 RGB image array.
+
+        Pipeline:
+          1. CNN forward pass (no_grad) → defect probability + label
+          2. Grad-CAM backward pass     → spatial heatmap (base64 PNG)
+          3. Autoencoder forward pass   → reconstruction error / anomaly score
+          4. Combine: flag needs_review when CNN and AE disagree
+        """
         start = time.perf_counter()
 
-        # Two tensors: the classifier wants ImageNet stats, the autoencoder
-        # wants plain [0, 1] to match its Sigmoid output.
-        cnn_batch = preprocess_image(img_np).to(self.device).unsqueeze(0)
-        ae_batch = (
-            preprocess_image(img_np, normalize=False).to(self.device).unsqueeze(0)
-        )
+        # Resize once — reused by overlay and AE
+        img_resized = cv2.resize(img_np, (256, 256))
+
+        # ── 1. CNN classification ──────────────────────────────────────
+        cnn_tensor = preprocess_image(img_np).to(self.device)
 
         with torch.no_grad():
-            probs = torch.softmax(self.cnn(cnn_batch), dim=1)[0]
-            reconstruction = self.ae(ae_batch)
-            anomaly_score = float(
-                torch.nn.functional.mse_loss(reconstruction, ae_batch).item()
-            )
+            logits = self.cnn(cnn_tensor.unsqueeze(0))
+            probs  = torch.softmax(logits, dim=1)[0]
 
-        defect_prob = float(probs[1].item())
-        cnn_flags_defect = defect_prob > self.classification_threshold
-        cnn_confidence = defect_prob if cnn_flags_defect else 1.0 - defect_prob
-        ae_flags_defect = anomaly_score > self.anomaly_threshold
+        defect_prob    = float(probs[1].item())
+        is_defective   = defect_prob >= self.classification_threshold
+        cnn_confidence = defect_prob if is_defective else float(probs[0].item())
 
-        # The classifier decides. On this dataset the autoencoder's
-        # reconstruction error barely separates good from defective (good mean
-        # 0.00204 vs defect mean 0.00234, ranges overlapping), so using it as a
-        # veto would reject nearly every good unit. It is kept as a second
-        # opinion: when it disagrees with the classifier, flag for review.
-        result = {
-            "prediction": "defective" if cnn_flags_defect else "good",
-            "confidence": round(cnn_confidence, 4),
-            "anomaly_score": round(anomaly_score, 6),
-            "anomaly_threshold": self.anomaly_threshold,
-            "needs_review": cnn_flags_defect != ae_flags_defect,
-            "heatmap_b64": None,
-            "latency_ms": round((time.perf_counter() - start) * 1000, 2),
+        # ── 2. Grad-CAM heatmap ────────────────────────────────────────
+        heatmap_b64: Optional[str] = None
+        if self.include_heatmap:
+            try:
+                # Always visualise class 1 (defect signal) — even on good images,
+                # this shows which regions the model checked and found unremarkable.
+                cam     = self.gradcam.generate(cnn_tensor, class_idx=1)
+                overlay = overlay_gradcam(img_resized, cam, alpha=0.45)
+                # overlay is RGB; imencode expects BGR
+                _, buf      = cv2.imencode(".png", cv2.cvtColor(overlay, cv2.COLOR_RGB2BGR))
+                heatmap_b64 = base64.b64encode(buf.tobytes()).decode("utf-8")
+            except Exception as exc:
+                logger.warning(f"Grad-CAM failed (non-fatal): {exc}")
+
+        # ── 3. Autoencoder anomaly score ───────────────────────────────
+        anomaly_score: Optional[float] = None
+        needs_review  = False
+
+        if self.ae is not None:
+            try:
+                ae_tensor = preprocess_image_ae(img_np).to(self.device)
+                with torch.no_grad():
+                    recon         = self.ae(ae_tensor.unsqueeze(0))
+                    anomaly_score = float(
+                        ((ae_tensor.unsqueeze(0) - recon) ** 2).mean().item()
+                    )
+                # Flag for human review when the two models disagree
+                ae_says_defective = anomaly_score >= self.anomaly_threshold
+                needs_review      = is_defective != ae_says_defective
+            except Exception as exc:
+                logger.warning(f"Autoencoder inference failed (non-fatal): {exc}")
+
+        return {
+            "prediction":             "defective" if is_defective else "good",
+            "confidence":             round(cnn_confidence, 4),
+            "defect_prob":            round(defect_prob, 4),
+            "classification_threshold": round(self.classification_threshold, 4),
+            "anomaly_score":          round(anomaly_score, 6) if anomaly_score is not None else None,
+            "anomaly_threshold":      self.anomaly_threshold,
+            "needs_review":           needs_review,
+            "heatmap_b64":            heatmap_b64,
+            "latency_ms":             round((time.perf_counter() - start) * 1000, 2),
         }
-        return result
 
+
+# ------------------------------------------------------------------ #
+#  CLI entry point                                                      #
+# ------------------------------------------------------------------ #
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--image", required=True)
+    parser.add_argument("--image",  required=True)
     parser.add_argument("--config", default="configs/config.yaml")
     args = parser.parse_args()
 
@@ -112,12 +177,17 @@ def main():
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     predictor = DefectPredictor(config_path=args.config)
-    result = predictor.predict(img_rgb)
+    result    = predictor.predict(img_rgb)
 
-    print("\n--- DefectScope Prediction ---")
-    print(f"Prediction:  {result['prediction'].upper()}")
-    print(f"Confidence:  {result['confidence']:.1%}")
-    print(f"Latency:     {result['latency_ms']} ms")
+    print("\n─── DefectScope Prediction ───")
+    print(f"Prediction:    {result['prediction'].upper()}")
+    print(f"Defect prob:   {result['defect_prob']:.1%}  (threshold {result['classification_threshold']:.1%})")
+    print(f"Confidence:    {result['confidence']:.1%}")
+    if result["anomaly_score"] is not None:
+        print(f"Anomaly score: {result['anomaly_score']:.6f}  (threshold {result['anomaly_threshold']:.6f})")
+    print(f"Needs review:  {result['needs_review']}")
+    print(f"Heatmap:       {'yes' if result['heatmap_b64'] else 'no'}")
+    print(f"Latency:       {result['latency_ms']} ms")
 
 
 if __name__ == "__main__":

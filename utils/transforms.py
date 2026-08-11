@@ -11,17 +11,11 @@ def preprocess_image(
     img_np: np.ndarray, image_size: int = 256, normalize: bool = True
 ) -> torch.Tensor:
     """
-    Preprocess a raw uint8 RGB image for model inference.
+    Preprocess a raw uint8 RGB image for the DenseNet classifier.
 
-    Returns a float32 tensor of shape (C, H, W). This is the single source of
-    truth for inference preprocessing — training transforms (albumentations)
-    should use the same stats.
-
-    normalize=True  → ImageNet stats, for the DenseNet classifier.
-    normalize=False → plain [0, 1], for the autoencoder. Its decoder ends in a
-                      Sigmoid, so it reconstructs into [0, 1]; scoring it
-                      against an ImageNet-normalised tensor (range ≈ -2.1 to
-                      2.6) inflates reconstruction error by ~500x.
+    Returns a float32 tensor of shape (C, H, W), normalized with ImageNet stats.
+    This is the single source of truth for inference preprocessing —
+    training transforms (albumentations) should use the same stats.
     """
     img = cv2.resize(img_np, (image_size, image_size))
     img = img.astype(np.float32) / 255.0
@@ -29,3 +23,15 @@ def preprocess_image(
         img = (img - IMAGENET_MEAN) / IMAGENET_STD
     # HWC → CHW
     return torch.from_numpy(img.transpose(2, 0, 1))
+
+
+def preprocess_image_ae(img_np: np.ndarray, image_size: int = 256) -> torch.Tensor:
+    """
+    Preprocess a raw uint8 RGB image for the autoencoder.
+
+    Plain [0, 1] — deliberately no ImageNet normalization. The decoder ends in a
+    Sigmoid, so it reconstructs into [0, 1]; scoring that against an
+    ImageNet-normalized tensor (range ≈ -2.1 to 2.6) inflates reconstruction
+    error by roughly 500x and makes every unit look anomalous.
+    """
+    return preprocess_image(img_np, image_size=image_size, normalize=False)

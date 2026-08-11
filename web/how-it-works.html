@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DefectScope | How it works</title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <nav class="nav">
+      <a class="brand" href="/">DefectScope</a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/how-it-works" class="active">How it works</a>
+      </div>
+    </nav>
+
+    <section class="panel section">
+      <h2>How this works</h2>
+      <p>You upload one product photo. The model checks that image and gives a prediction: good or defective.</p>
+      <img class="full-img" src="/assets/flow.svg" alt="DefectScope workflow diagram" />
+    </section>
+
+    <section class="panel section">
+      <h2>What to upload and what not to upload</h2>
+      <div class="grid-2">
+        <article class="card">
+          <h3>Upload this</h3>
+          <ul class="list">
+            <li>Single product photo (bottle, cable, surface part)</li>
+            <li>Object clearly visible and in focus</li>
+            <li>JPG or PNG with normal lighting</li>
+            <li>Close-up shots that show surface details</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Do not upload this</h3>
+          <ul class="list">
+            <li>Screenshots of websites or app UI</li>
+            <li>Memes, documents, posters, text-heavy images</li>
+            <li>Very blurry or very tiny images</li>
+            <li>Scenes with many unrelated objects</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel section">
+      <h2>Real examples from your dataset</h2>
+      <p>These sample images are loaded from the local MVTec dataset in this project.</p>
+      <div class="grid-2">
+        <article class="card">
+          <h3>Good sample (bottle)</h3>
+          <img class="full-img" src="/samples/bottle/test/good/019.png" alt="Good bottle sample from dataset" />
+          <ul class="list">
+            <li>Label expected: good</li>
+            <li>Clean shape and surface</li>
+            <li>No visible damage pattern</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Defect sample (bottle)</h3>
+          <img class="full-img" src="/samples/bottle/test/broken_large/016.png" alt="Defect bottle sample from dataset" />
+          <ul class="list">
+            <li>Label expected: defective</li>
+            <li>Visible crack / break region</li>
+            <li>Used by model for defect learning</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel section">
+      <h2>Another category example (cable)</h2>
+      <div class="grid-2">
+        <article class="card">
+          <h3>Cable sample (defect)</h3>
+          <img class="full-img" src="/samples/cable/test/poke_insulation/009.png" alt="Cable defect sample from dataset" />
+        </article>
+        <article class="card">
+          <h3>How to read results</h3>
+          <ul class="list">
+            <li>Prediction tells model opinion: good or defective.</li>
+            <li>Confidence tells strength of that opinion.</li>
+            <li>Low confidence means uncertain.</li>
+            <li>Always make final decision with manual QA.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel section">
+      <h2>How to present this project</h2>
+      <div class="grid-2">
+        <article class="card">
+          <h3>What to show in demo</h3>
+          <ul class="list">
+            <li>Take/upload image on Home page</li>
+            <li>Live prediction + confidence + latency</li>
+            <li>How confidence changes for different images</li>
+            <li>How-it-works page with dataset examples</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>What to say clearly</h3>
+          <ul class="list">
+            <li>This is a screening tool, not final QA authority.</li>
+            <li>Low confidence results are uncertain by design.</li>
+            <li>Manual review is required for final decisions.</li>
+            <li>The model performs best on similar dataset style images.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <p class="footer">Built by Pranjal Tariga Suresh</p>
+  </main>
+</body>
+</html>
