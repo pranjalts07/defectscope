@@ -298,6 +298,35 @@ h1 {
   background: #eef8f6;
 }
 
+/* The attention map costs a Grad-CAM backward pass, which dominates request time
+   on a small CPU box. Unchecked by default so the first click feels quick; this
+   row is here for the visitor who wants the explanation and will wait for it. */
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  padding: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.option-row input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.option-row .hint {
+  font-weight: 600;
+  opacity: 0.75;
+}
+
 button {
   border: 0;
   border-radius: 12px;

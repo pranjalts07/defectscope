@@ -12,6 +12,7 @@ const uploadName = document.getElementById("upload-name");
 const cameraName = document.getElementById("camera-name");
 const uploadPickerBox = document.getElementById("upload-picker-box");
 const cameraPickerBox = document.getElementById("camera-picker-box");
+const heatmapToggle = document.getElementById("heatmap-toggle");
 
 const resultEmpty = document.getElementById("result-empty");
 const resultCard = document.getElementById("result-card");
@@ -190,11 +191,18 @@ if (form) {
     const data = new FormData();
     data.append("file", file);
 
+    // Grad-CAM is opt-in: the backward pass is the slowest part of the request, and
+    // the verdict does not depend on it. Only ask for it when the box is ticked.
+    const wantHeatmap = Boolean(heatmapToggle && heatmapToggle.checked);
+    const endpoint = wantHeatmap ? "/predict?heatmap=true" : "/predict";
+
     resultRaw.textContent = "Running inference...";
-    statusText.textContent = `Analyzing ${file.name}...`;
+    statusText.textContent = wantHeatmap
+      ? `Analyzing ${file.name} with attention map — this takes longer...`
+      : `Analyzing ${file.name}...`;
 
     try {
-      const response = await fetch("/predict", { method: "POST", body: data });
+      const response = await fetch(endpoint, { method: "POST", body: data });
       const payload = await response.json();
       resultRaw.textContent = JSON.stringify(payload, null, 2);
 
