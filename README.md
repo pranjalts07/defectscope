@@ -197,8 +197,8 @@ python -m inference.predict --image path/to/bottle.jpg --config configs/config.y
 defectscope/
 ├── api/                      # FastAPI web server and REST endpoints
 │   ├── main.py              # Application server, request handlers
-│   ├── schemas.py           # Pydantic models for request/response validation
-│   └── static/              # Web UI (HTML, CSS, JavaScript)
+│   └── schemas.py           # Pydantic models for request/response validation
+├── web/                      # Web UI (HTML, CSS, JavaScript) served by the API
 ├── models/                   # Neural network implementations
 │   ├── cnn_classifier.py    # DenseNet-121 for classification
 │   └── autoencoder.py       # Convolutional autoencoder for anomaly detection
