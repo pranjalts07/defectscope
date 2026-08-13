@@ -161,13 +161,23 @@ Upload a bottle image via drag-and-drop or file picker. Results include:
 - **Classification**: Good or Defective
 - **Confidence**: Model certainty (0-100%)
 - **Latency**: Processing time in milliseconds
-- **Grad-CAM Heatmap**: Visual explanation of the decision
 - **Anomaly Score**: Reconstruction error from the autoencoder
+- **Grad-CAM Heatmap**: Visual explanation of the decision — opt-in via the
+  "Show model attention map" checkbox, because it needs a backward pass and is
+  the slowest part of a request on a small CPU instance
 
 ### API Endpoint
 
 ```bash
 curl -X POST http://localhost:8000/predict \
+     -F "file=@bottle.jpg"
+```
+
+The heatmap is off by default and `heatmap_b64` comes back `null`. Ask for the
+Grad-CAM overlay explicitly when the explanation is worth the extra wait:
+
+```bash
+curl -X POST "http://localhost:8000/predict?heatmap=true" \
      -F "file=@bottle.jpg"
 ```
 
