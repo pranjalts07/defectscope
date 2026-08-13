@@ -11,7 +11,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -540,9 +540,19 @@ async def health():
     "/predict",
     response_model=PredictionResponse,
     summary="Classify an uploaded image",
-    description="Upload a JPG or PNG of a product surface or part. The API returns good/defective, confidence, and latency.",
+    description=(
+        "Upload a JPG or PNG of a product surface or part. The API returns good/defective, "
+        "confidence, and latency. Pass ?heatmap=true to also get the Grad-CAM overlay — it "
+        "needs a backward pass and makes the request several times slower, so it is off by default."
+    ),
 )
-async def predict(file: UploadFile = File(...)):
+async def predict(
+    file: UploadFile = File(...),
+    heatmap: bool = Query(
+        False,
+        description="Compute the Grad-CAM attention overlay. Much slower; heatmap_b64 is null when off.",
+    ),
+):
     if app.state.predictor is None:
         raise HTTPException(status_code=503, detail="Models not loaded. Check server logs.")
 
@@ -558,7 +568,7 @@ async def predict(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Could not decode image.")
 
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    result = app.state.predictor.predict(img_rgb)
+    result = app.state.predictor.predict(img_rgb, include_heatmap=heatmap)
 
     app.state.request_count += 1
     app.state.total_latency_ms += float(result["latency_ms"])
